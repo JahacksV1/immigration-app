@@ -215,6 +215,13 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border bg-background-elevated mt-12">
         <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="text-center mb-6">
+            <p className="text-sm text-foreground-muted">
+              This service provides document drafting assistance only. Not legal advice.
+              <br />
+              Consult an immigration attorney for legal guidance.
+            </p>
+          </div>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-foreground-muted">
               © 2026 Immigration Letter Generator

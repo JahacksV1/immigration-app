@@ -126,12 +126,47 @@ export default function StartPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* AI Generation Overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card border border-accent-purple/30 rounded-lg p-8 shadow-glow max-w-md mx-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-accent-purple/20 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-accent-purple border-t-transparent rounded-full animate-spin" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Generating Your Letter</h3>
+                <p className="text-sm text-foreground-muted">This takes 10-15 seconds...</p>
+              </div>
+            </div>
+            <p className="text-sm text-foreground-muted">
+              Our AI is drafting a professional Letter of Explanation based on your information.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-border bg-background-elevated">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <Link href="/" className="text-xl font-semibold text-foreground hover:text-accent-purple transition-colors">
-            Immigration Letter Generator
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 text-foreground-muted hover:text-accent-purple transition-colors group"
+          >
+            <svg 
+              className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm font-medium">Back</span>
           </Link>
+          <div className="h-6 w-px bg-border" />
+          <h1 className="text-xl font-semibold text-foreground">
+            Immigration Letter Generator
+          </h1>
         </div>
       </header>
 

@@ -1,9 +1,16 @@
 import { GeneratedDocument } from '@/types/document';
 import { logger } from '@/lib/logger';
+import jsPDF from 'jspdf';
 
 /**
  * PDF generation service
- * Converts document to PDF (placeholder - will use jsPDF or similar)
+ * Converts document to professionally formatted PDF
+ * 
+ * Elite Standards:
+ * - <80 lines (atomic service)
+ * - ServiceResult return pattern
+ * - Proper error handling
+ * - Structured logging
  */
 
 interface PdfResult {
@@ -13,32 +20,45 @@ interface PdfResult {
 }
 
 /**
- * Generate PDF from document
- * TODO: Implement actual PDF generation (jsPDF, PDFKit, or Puppeteer)
+ * Generate PDF from document with professional formatting
  */
 export async function generatePDF(document: GeneratedDocument): Promise<PdfResult> {
   try {
-    logger.info('Generating PDF', {
-      sectionCount: document.sections.length,
-      wordCount: document.rawText.split(/\s+/).length,
+    const wordCount = document.rawText.split(/\s+/).length;
+    logger.info('Generating PDF', { wordCount });
+
+    // Create PDF with letter-sized page
+    const doc = new jsPDF({
+      format: 'letter',
+      unit: 'pt',
     });
 
-    // Placeholder: Return text as buffer
-    // TODO: Replace with actual PDF generation
-    const pdfContent = `
-IMMIGRATION LETTER OF EXPLANATION
-Generated: ${new Date(document.generatedAt).toLocaleDateString()}
+    // Set serif font for professional appearance
+    doc.setFont('times', 'normal');
+    doc.setFontSize(12);
 
-${document.sections.map(section => `
-${section.heading.toUpperCase()}
-${section.content}
-`).join('\n')}
-    `.trim();
+    // Page margins
+    const leftMargin = 72;  // 1 inch
+    const rightMargin = 72;
+    const topMargin = 72;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxLineWidth = pageWidth - leftMargin - rightMargin;
 
-    const buffer = Buffer.from(pdfContent, 'utf-8');
+    // Split text into lines that fit the page width
+    const lines = doc.splitTextToSize(document.rawText, maxLineWidth);
+
+    // Add text to PDF with proper line spacing (1.6)
+    doc.text(lines, leftMargin, topMargin, {
+      lineHeightFactor: 1.6,
+    });
+
+    // Convert to buffer
+    const pdfOutput = doc.output('arraybuffer');
+    const buffer = Buffer.from(pdfOutput);
 
     logger.info('PDF generated successfully', {
       size: buffer.length,
+      pages: doc.getNumberOfPages(),
     });
 
     return { success: true, buffer };

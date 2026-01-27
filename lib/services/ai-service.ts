@@ -28,38 +28,64 @@ function buildPrompt(formData: FormData): string {
     toneInstruction = 'Use warm, personal language while maintaining professionalism.';
   }
 
-  return `You are an expert immigration document writer. Generate a professional Letter of Explanation for an immigration application.
+  return `You are an expert immigration document writer with 15+ years of experience drafting Letters of Explanation for USCIS, IRCC, and other immigration authorities. Your letters are known for being clear, professional, and persuasive while maintaining complete honesty.
 
 **Applicant Information:**
-- Name: ${aboutYou.fullName}
-- Citizenship: ${aboutYou.citizenshipCountry}
-- Current Residence: ${aboutYou.currentCountry}
+- Full Name: ${aboutYou.fullName}
+- Country of Citizenship: ${aboutYou.citizenshipCountry}
+- Current Country of Residence: ${aboutYou.currentCountry}
 - Application Type: ${applicationContext.applicationType}
 - Target Country: ${applicationContext.targetCountry}
 
-**Situation to Explain:**
+**Situation Requiring Explanation:**
 ${explanation.mainExplanation}
 
-${explanation.dates ? `**Relevant Dates/Events:**\n${explanation.dates}\n` : ''}
-${explanation.background ? `**Additional Context:**\n${explanation.background}\n` : ''}
-${emphasis ? `**Points to Emphasize:**\n${emphasis}\n` : ''}
+${explanation.dates ? `**Timeline/Relevant Dates:**\n${explanation.dates}\n` : ''}
+${explanation.background ? `**Background Context:**\n${explanation.background}\n` : ''}
+${emphasis ? `**Key Points to Emphasize:**\n${emphasis}\n` : ''}
 
-**Tone:** ${toneInstruction}
+**Writing Guidelines:**
+${toneInstruction}
 
-**Requirements:**
-1. Write in first person
-2. Structure the letter with clear sections:
-   - Introduction (brief self-introduction and purpose)
-   - Background/Context (relevant history)
-   - Explanation (detailed explanation of the situation)
-   - Conclusion (closing statement)
-3. Be factual and honest
-4. Do NOT make legal claims or promises
-5. Do NOT provide legal advice
-6. Keep it professional and concise (500-800 words)
-7. Format as a formal letter
+**Critical Requirements:**
+1. **Format as a professional business letter:**
+   - Date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+   - Salutation: "To Whom It May Concern:"
+   - Body with clear paragraph structure
+   - Closing: "Sincerely," followed by ${aboutYou.fullName}
 
-Generate the letter now.`;
+2. **Content Structure (500-800 words):**
+   - **Introduction (2-3 sentences):** State who you are, your citizenship, and the purpose of this letter
+   - **Background (1-2 paragraphs):** Provide relevant context about your situation, timeline, and circumstances
+   - **Detailed Explanation (2-3 paragraphs):** Thoroughly explain the situation, addressing potential concerns proactively and honestly
+   - **Supporting Details:** Include specific dates, facts, and concrete details that support your explanation
+   - **Conclusion (1 paragraph):** Reaffirm your commitment, express appreciation, and provide contact information if appropriate
+
+3. **Writing Quality Standards:**
+   - Write in first person, professional tone
+   - Use specific details and concrete examples (not vague statements)
+   - Be honest and factual - never exaggerate or make promises
+   - Address potential concerns proactively
+   - Show responsibility and accountability where appropriate
+   - Demonstrate clear understanding of immigration requirements
+   - Use proper paragraph spacing (double line breaks between paragraphs)
+   - Professional vocabulary appropriate for government officials
+
+4. **What to AVOID:**
+   - Do NOT make legal claims or guarantees about immigration outcomes
+   - Do NOT provide legal advice or interpretations of law
+   - Do NOT use overly emotional language
+   - Do NOT make promises about future behavior you cannot guarantee
+   - Do NOT include irrelevant personal details
+
+5. **What to INCLUDE:**
+   - Specific dates and timelines
+   - Concrete facts and verifiable information
+   - Logical flow from background → explanation → conclusion
+   - Professional, respectful tone throughout
+   - Clear paragraph breaks for readability
+
+Generate a complete, professional Letter of Explanation now. Make it thorough, credible, and well-structured.`;
 }
 
 /**

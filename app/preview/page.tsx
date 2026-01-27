@@ -48,6 +48,21 @@ export default function PreviewPage() {
 
     setIsPurchasing(true);
     try {
+      // DEV MODE: Skip Stripe for testing (set NEXT_PUBLIC_SKIP_PAYMENT=true in .env.local)
+      if (process.env.NEXT_PUBLIC_SKIP_PAYMENT === 'true') {
+        logger.info('Skipping payment (dev mode)', { documentId });
+        
+        // Mark document as paid on server (dev mode only)
+        await fetch('/api/document/mark-paid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documentId }),
+        });
+        
+        router.push(`/editor?documentId=${documentId}`);
+        return;
+      }
+
       logger.info('Initiating Stripe checkout', { documentId });
 
       // Call real Stripe checkout API
@@ -91,10 +106,25 @@ export default function PreviewPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background-elevated">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <Link href="/" className="text-xl font-semibold text-foreground hover:text-accent-purple transition-colors">
-            Immigration Letter Generator
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 text-foreground-muted hover:text-accent-purple transition-colors group"
+          >
+            <svg 
+              className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm font-medium">Back</span>
           </Link>
+          <div className="h-6 w-px bg-border" />
+          <h1 className="text-xl font-semibold text-foreground">
+            Immigration Letter Generator
+          </h1>
         </div>
       </header>
 
@@ -109,24 +139,13 @@ export default function PreviewPage() {
               <div className="bg-background-elevated p-8 rounded-lg border border-border relative overflow-hidden min-h-[500px]">
                 <div className="filter blur-sm select-none">
                   {document ? (
-                    <div className="prose prose-invert max-w-none">
-                      {document.sections.map((section, index) => (
-                        <div key={index} className="mb-6">
-                          {section.heading && (
-                            <h3 className="text-lg font-semibold text-foreground mb-2">
-                              {section.heading}
-                            </h3>
-                          )}
-                          <div className="text-foreground-muted whitespace-pre-wrap">
-                            {section.content.substring(0, 300)}...
-                          </div>
-                        </div>
-                      ))}
+                    <div className="font-serif leading-relaxed text-foreground-muted whitespace-pre-wrap max-w-none">
+                      {document.rawText.substring(0, 400)}...
                     </div>
                   ) : (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4">Letter of Explanation</h3>
-                      <p className="mb-4">Dear Immigration Officer,</p>
+                    <div className="font-serif leading-relaxed">
+                      <p className="mb-4">January 27, 2026</p>
+                      <p className="mb-4">To Whom It May Concern:</p>
                       <p className="mb-4">
                         I am writing to provide additional context regarding my application...
                       </p>
@@ -156,7 +175,7 @@ export default function PreviewPage() {
                       Unlock for $49
                     </Button>
                     <p className="text-xs text-foreground-muted mt-4">
-                      Secure payment via Stripe • Instant access
+                      Secure payment via Stripe • One-time payment • Not legal advice
                     </p>
                   </div>
                 </div>
