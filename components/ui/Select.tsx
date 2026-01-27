@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { SelectHTMLAttributes, forwardRef } from 'react';
+import { Tooltip } from './Tooltip';
 
 interface SelectOption {
   value: string;
@@ -11,6 +12,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   error?: string;
   label?: string;
   placeholder?: string;
+  tooltip?: string;
 }
 
 /**
@@ -18,7 +20,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
  * Styled dropdown select with options
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, options, error, label, placeholder, id, ...props }, ref) => {
+  ({ className, options, error, label, tooltip, placeholder, id, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
 
     return (
@@ -26,9 +28,26 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-zinc-300 mb-2"
+            className="flex items-center gap-2 text-sm font-medium text-zinc-300 mb-2"
           >
-            {label}
+            <span>{label}</span>
+            {tooltip && (
+              <Tooltip content={tooltip}>
+                <svg
+                  className="w-4 h-4 text-foreground-muted hover:text-accent-purple transition-colors cursor-help"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </Tooltip>
+            )}
           </label>
         )}
         <select

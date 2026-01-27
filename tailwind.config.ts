@@ -20,6 +20,7 @@ const config: Config = {
           purple: '#a855f7',
           'purple-hover': '#9333ea',
           'purple-glow': '#c084fc',
+          green: '#10b981',
         },
       },
       fontFamily: {

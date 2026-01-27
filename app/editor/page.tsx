@@ -22,35 +22,68 @@ export default function EditorPage() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    // Get document ID from localStorage
-    const storedDocId = localStorage.getItem('current-document-id');
-    if (!storedDocId) {
-      router.push('/start');
-      return;
-    }
-
-    // Check if paid
-    const isPaid = localStorage.getItem(`document-${storedDocId}-paid`);
-    if (!isPaid) {
-      router.push('/preview');
-      return;
-    }
-
-    setDocumentId(storedDocId);
-
-    // Get document
-    const storedDoc = localStorage.getItem(`document-${storedDocId}`);
-    if (storedDoc) {
+    const verifyPaymentAndLoadDocument = async () => {
       try {
-        const parsed = JSON.parse(storedDoc) as GeneratedDocument;
-        setDocument(parsed);
-        setEditedText(parsed.rawText);
-      } catch (error) {
-        logger.error('Failed to parse stored document', { error });
-      }
-    }
+        // Get document ID from URL params (passed from Stripe redirect) or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const urlDocId = urlParams.get('documentId');
+        const storedDocId = localStorage.getItem('current-document-id');
+        
+        const docId = urlDocId || storedDocId;
 
-    setIsLoading(false);
+        if (!docId) {
+          logger.warn('No document ID found, redirecting to start');
+          router.push('/start');
+          return;
+        }
+
+        setDocumentId(docId);
+
+        // Verify payment status with SERVER (security!)
+        logger.info('Verifying payment status', { documentId: docId, sessionId });
+        
+        const response = await fetch(`/api/document/verify?documentId=${docId}`);
+        const result = await response.json();
+
+        if (!result.success) {
+          logger.warn('Verification failed', { documentId: docId, error: result.error });
+          router.push('/preview');
+          return;
+        }
+
+        // Check server-side payment confirmation
+        if (!result.data.isPaid) {
+          logger.warn('Document not paid, redirecting to preview', { documentId: docId });
+          router.push('/preview');
+          return;
+        }
+
+        // Document is paid - load it
+        const verifiedDocument = result.data.document;
+        if (verifiedDocument) {
+          setDocument(verifiedDocument);
+          setEditedText(verifiedDocument.rawText);
+          logger.info('Document loaded successfully', { documentId: docId });
+        } else {
+          // Fallback to localStorage (for compatibility)
+          const storedDoc = localStorage.getItem(`document-${docId}`);
+          if (storedDoc) {
+            const parsed = JSON.parse(storedDoc) as GeneratedDocument;
+            setDocument(parsed);
+            setEditedText(parsed.rawText);
+          }
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Failed to verify payment or load document', { error: errorMessage });
+        router.push('/preview');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyPaymentAndLoadDocument();
   }, [router]);
 
   const handleDownload = async () => {
@@ -64,12 +97,12 @@ export default function EditorPage() {
       // For now, download as text file
       const blob = new Blob([editedText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = 'immigration_letter.txt';
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       logger.info('Download complete');

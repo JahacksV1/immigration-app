@@ -22,7 +22,7 @@ const STEP_NAMES = ['About You', 'Application', 'Explanation', 'Tone'];
  */
 export default function StartPage() {
   const router = useRouter();
-  const { currentStep, currentStepId, goToNextStep, goToPreviousStep, isLastStep, totalSteps } = useFormStep();
+  const { currentStep, currentStepId, goToNextStep, goToPreviousStep, totalSteps } = useFormStep();
   const { formData, updateFormData, isLoaded } = useFormPersistence();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,6 +52,15 @@ export default function StartPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // LOG EXACT DATA BEING SENT
+      logger.info('=== FORM SUBMISSION DEBUG ===');
+      logger.info('Full formData being sent:', {
+        aboutYou: formData.aboutYou,
+        applicationContext: formData.applicationContext,
+        explanation: formData.explanation,
+        tone: formData.tone,
+        emphasis: formData.emphasis,
+      });
       logger.info('Submitting form to generate letter');
 
       // Call generation API
@@ -69,10 +78,31 @@ export default function StartPage() {
         throw new Error(result.error || 'Failed to generate letter');
       }
 
-      const { documentId } = result.data;
+      const { documentId, document } = result.data;
 
-      // Store document ID in localStorage for preview page
+      // LOG WHAT WE RECEIVED FROM API
+      logger.info('=== API RESPONSE DEBUG ===');
+      logger.info('Received from API:', {
+        documentId,
+        hasDocument: !!document,
+        hasSections: !!document?.sections,
+        sectionsCount: document?.sections?.length,
+        hasRawText: !!document?.rawText,
+        rawTextLength: document?.rawText?.length,
+      });
+
+      // Store document ID and document in localStorage for preview page
       localStorage.setItem('current-document-id', documentId);
+      localStorage.setItem(`document-${documentId}`, JSON.stringify(document));
+      
+      // VERIFY IT WAS STORED
+      const stored = localStorage.getItem(`document-${documentId}`);
+      logger.info('=== LOCALSTORAGE DEBUG ===');
+      logger.info('Document stored in localStorage:', {
+        documentId,
+        stored: !!stored,
+        storedLength: stored?.length,
+      });
 
       logger.info('Letter generated successfully', { documentId });
 

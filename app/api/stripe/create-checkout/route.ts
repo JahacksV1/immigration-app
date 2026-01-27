@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import Stripe from 'stripe';
 import { createCheckoutSchema } from '@/lib/validation';
 import { apiSuccess, apiError, withErrorHandling } from '@/lib/api-helpers';
 import { getDocument } from '@/lib/services/storage-service';
@@ -35,19 +36,40 @@ export async function POST(req: NextRequest) {
       return apiError('Document already purchased', 400, 'ALREADY_PAID');
     }
 
-    // TODO: Create Stripe checkout session
-    // For now, return mock data
-    const mockSessionId = `cs_test_${Date.now()}`;
-    const mockCheckoutUrl = `https://checkout.stripe.com/pay/${mockSessionId}`;
+    // Initialize Stripe
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      logger.error('Stripe secret key not configured');
+      return apiError('Payment system not configured', 500, 'STRIPE_NOT_CONFIGURED');
+    }
 
-    logger.info('Checkout session created (mock)', {
+    const stripe = new Stripe(stripeSecretKey);
+
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: process.env.STRIPE_PRICE_ID!,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/editor?session_id={CHECKOUT_SESSION_ID}&documentId=${documentId}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/preview?documentId=${documentId}`,
+      metadata: {
+        documentId,
+      },
+    });
+
+    logger.info('Stripe checkout session created', {
       documentId,
-      sessionId: mockSessionId,
+      sessionId: session.id,
     });
 
     return apiSuccess({
-      sessionId: mockSessionId,
-      url: mockCheckoutUrl,
+      sessionId: session.id,
+      url: session.url,
     });
   }, 'POST /api/stripe/create-checkout');
 }

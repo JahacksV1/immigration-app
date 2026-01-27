@@ -78,7 +78,7 @@ async function callOpenAI(prompt: string): Promise<string> {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -108,6 +108,12 @@ async function callOpenAI(prompt: string): Promise<string> {
  */
 async function callAnthropic(prompt: string): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
+  
+  logger.info('Calling Anthropic API', { 
+    hasKey: !!apiKey,
+    keyPrefix: apiKey ? apiKey.substring(0, 15) + '...' : 'none'
+  });
+  
   if (!apiKey) {
     throw new Error('Anthropic API key not configured');
   }
@@ -120,7 +126,7 @@ async function callAnthropic(prompt: string): Promise<string> {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1500,
       messages: [
         {
@@ -174,23 +180,38 @@ function parseLetterSections(rawText: string): { heading: string; content: strin
  */
 export async function generateLetter(formData: FormData): Promise<GenerateLetterResult> {
   try {
-    logger.info('Generating letter', {
-      name: formData.aboutYou.fullName,
-      applicationType: formData.applicationContext.applicationType,
+    // LOG FULL DATA RECEIVED BY AI SERVICE
+    logger.info('=== AI SERVICE DEBUG ===');
+    logger.info('Full formData received by AI service:', {
+      aboutYou: formData.aboutYou,
+      applicationContext: formData.applicationContext,
+      explanation: {
+        mainExplanation: formData.explanation.mainExplanation.substring(0, 100) + '...',
+        dates: formData.explanation.dates,
+        background: formData.explanation.background?.substring(0, 50),
+      },
+      tone: formData.tone,
+      emphasis: formData.emphasis?.substring(0, 50),
     });
 
     // Build prompt
     const prompt = buildPrompt(formData);
+    
+    // LOG THE ACTUAL PROMPT BEING SENT TO AI
+    logger.info('=== PROMPT SENT TO AI ===');
+    logger.info('Prompt preview (first 500 chars):', prompt.substring(0, 500));
+    logger.info('Prompt length:', prompt.length);
 
-    // Call AI (try Claude first, fallback to OpenAI)
+    // Call AI (use OpenAI primary, Claude as fallback)
     let rawText: string;
     try {
+      rawText = await callOpenAI(prompt);
+      logger.info('Letter generated via OpenAI (gpt-4o-mini)');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.warn('OpenAI failed, trying Claude', { error: errorMessage });
       rawText = await callAnthropic(prompt);
       logger.info('Letter generated via Claude');
-    } catch (error) {
-      logger.warn('Claude failed, falling back to OpenAI', { error });
-      rawText = await callOpenAI(prompt);
-      logger.info('Letter generated via OpenAI');
     }
 
     // Parse into sections
@@ -202,9 +223,16 @@ export async function generateLetter(formData: FormData): Promise<GenerateLetter
       generatedAt: new Date().toISOString(),
     };
 
+    // LOG GENERATED DOCUMENT STRUCTURE
+    logger.info('=== GENERATED DOCUMENT DEBUG ===');
     logger.info('Letter generation successful', {
       wordCount: rawText.split(/\s+/).length,
       sectionCount: sections.length,
+      rawTextPreview: rawText.substring(0, 200) + '...',
+      sectionsPreview: sections.map(s => ({ 
+        heading: s.heading, 
+        contentLength: s.content.length 
+      })),
     });
 
     return { success: true, document };

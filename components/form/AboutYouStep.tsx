@@ -27,6 +27,7 @@ export function AboutYouStep({ data, onChange }: AboutYouStepProps) {
       <Input
         label="Full Name"
         placeholder="John Doe"
+        tooltip="Enter your full legal name as it appears on your passport or official documents. This personalizes your letter."
         value={data.fullName}
         onChange={(e) => onChange({ ...data, fullName: e.target.value })}
         required
@@ -35,6 +36,7 @@ export function AboutYouStep({ data, onChange }: AboutYouStepProps) {
       <Select
         label="Country of Citizenship"
         placeholder="Select your country of citizenship"
+        tooltip="Your country of citizenship helps us understand your immigration context and tailor the letter accordingly."
         value={data.citizenshipCountry}
         onChange={(e) => onChange({ ...data, citizenshipCountry: e.target.value })}
         options={COUNTRIES.map(c => ({ value: c.value, label: c.label }))}
@@ -44,6 +46,7 @@ export function AboutYouStep({ data, onChange }: AboutYouStepProps) {
       <Select
         label="Current Country of Residence"
         placeholder="Select where you currently live"
+        tooltip="Where you currently live. This provides important context for your immigration application."
         value={data.currentCountry}
         onChange={(e) => onChange({ ...data, currentCountry: e.target.value })}
         options={COUNTRIES.map(c => ({ value: c.value, label: c.label }))}

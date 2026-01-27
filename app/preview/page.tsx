@@ -48,21 +48,34 @@ export default function PreviewPage() {
 
     setIsPurchasing(true);
     try {
-      // TODO: Call Stripe checkout API
-      // For now, mock payment success
-      logger.info('Initiating checkout', { documentId });
+      logger.info('Initiating Stripe checkout', { documentId });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call real Stripe checkout API
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId }),
+      });
 
-      // Mock successful payment
-      localStorage.setItem(`document-${documentId}-paid`, 'true');
+      const result = await response.json();
 
-      logger.info('Payment successful (mock)');
-      router.push('/editor');
+      if (!result.success || !result.data?.url) {
+        throw new Error(result.error || 'Failed to create checkout session');
+      }
+
+      logger.info('Redirecting to Stripe checkout', {
+        documentId,
+        sessionId: result.data.sessionId,
+      });
+
+      // Redirect to Stripe checkout page
+      window.location.href = result.data.url;
     } catch (error) {
-      logger.error('Checkout failed', { error });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Checkout failed', { documentId, error: errorMessage });
       alert('Payment failed. Please try again.');
-    } finally {
       setIsPurchasing(false);
     }
   };

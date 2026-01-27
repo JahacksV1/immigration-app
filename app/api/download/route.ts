@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocument } from '@/lib/services/storage-service';
 import { generatePDF, generatePdfFilename } from '@/lib/services/pdf-service';
-import { apiError, withErrorHandling } from '@/lib/api-helpers';
+import { apiError } from '@/lib/api-helpers';
 import { logger } from '@/lib/logger';
 
 /**
@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
  * Download generated letter as PDF
  */
 export async function GET(req: NextRequest) {
-  return withErrorHandling(async () => {
+  try {
     const documentId = req.nextUrl.searchParams.get('documentId');
 
     if (!documentId) {
@@ -41,8 +41,11 @@ export async function GET(req: NextRequest) {
       size: pdfResult.buffer.length,
     });
 
+    // Convert Buffer to Uint8Array for web-standard response
+    const uint8Array = new Uint8Array(pdfResult.buffer);
+
     // Return PDF file
-    return new NextResponse(pdfResult.buffer, {
+    return new NextResponse(uint8Array, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
@@ -50,5 +53,13 @@ export async function GET(req: NextRequest) {
         'Content-Length': pdfResult.buffer.length.toString(),
       },
     });
-  }, 'GET /api/download');
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Unhandled API error', {
+      context: 'GET /api/download',
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return apiError('Internal server error', 500);
+  }
 }

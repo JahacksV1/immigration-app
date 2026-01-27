@@ -26,6 +26,7 @@ export function ApplicationContextStep({ data, onChange }: ApplicationContextSte
       <Select
         label="What are you applying for?"
         placeholder="Select application type"
+        tooltip="Select the type of immigration application you're submitting. This helps us frame your letter appropriately."
         value={data.applicationType}
         onChange={(e) => onChange({ ...data, applicationType: e.target.value })}
         options={APPLICATION_TYPES.map(t => ({ value: t.value, label: t.label }))}
@@ -35,6 +36,7 @@ export function ApplicationContextStep({ data, onChange }: ApplicationContextSte
       <Select
         label="Which country's immigration process?"
         placeholder="Select target country"
+        tooltip="The country where you're applying. Different countries have different expectations for explanation letters."
         value={data.targetCountry}
         onChange={(e) => onChange({ ...data, targetCountry: e.target.value })}
         options={COUNTRIES.map(c => ({ value: c.value, label: c.label }))}
