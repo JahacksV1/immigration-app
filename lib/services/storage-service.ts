@@ -4,10 +4,23 @@ import { logger } from '@/lib/logger';
 /**
  * Storage service for temporary document storage
  * Uses in-memory storage for MVP (can be replaced with Redis/DB later)
+ * 
+ * Note: Uses global object in development to persist across Next.js hot-reloads
  */
 
-// In-memory storage (reset on server restart)
-const documentStore = new Map<string, StoredDocument>();
+// Declare global type
+declare global {
+  // eslint-disable-next-line no-var
+  var documentStore: Map<string, StoredDocument> | undefined;
+}
+
+// In-memory storage (persists across hot-reloads in dev, reset on server restart)
+const documentStore = global.documentStore ?? new Map<string, StoredDocument>();
+
+// Store globally in development to survive hot-reloads
+if (process.env.NODE_ENV !== 'production') {
+  global.documentStore = documentStore;
+}
 
 // TTL: 24 hours
 const DOCUMENT_TTL_MS = 24 * 60 * 60 * 1000;
