@@ -199,8 +199,10 @@ export async function generateLetter(formData: FormData): Promise<GenerateLetter
     
     // LOG THE ACTUAL PROMPT BEING SENT TO AI
     logger.info('=== PROMPT SENT TO AI ===');
-    logger.info('Prompt preview (first 500 chars):', prompt.substring(0, 500));
-    logger.info('Prompt length:', prompt.length);
+    logger.info('Prompt preview', { 
+      preview: prompt.substring(0, 500),
+      totalLength: prompt.length,
+    });
 
     // Call AI (use OpenAI primary, Claude as fallback)
     let rawText: string;
