@@ -38,25 +38,54 @@ export async function POST(req: NextRequest) {
 
     // Initialize Stripe
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripePriceId = process.env.STRIPE_PRICE_ID;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    // Log environment variables (without exposing full keys)
+    logger.info('=== STRIPE ENV CHECK ===', {
+      hasSecretKey: !!stripeSecretKey,
+      secretKeyPrefix: stripeSecretKey ? stripeSecretKey.substring(0, 12) + '...' : 'MISSING',
+      hasPriceId: !!stripePriceId,
+      priceIdPrefix: stripePriceId ? stripePriceId.substring(0, 12) + '...' : 'MISSING',
+      hasAppUrl: !!appUrl,
+      appUrl,
+    });
+
     if (!stripeSecretKey) {
       logger.error('Stripe secret key not configured');
       return apiError('Payment system not configured', 500, 'STRIPE_NOT_CONFIGURED');
     }
 
-    const stripe = new Stripe(stripeSecretKey);
+    if (!stripePriceId) {
+      logger.error('Stripe price ID not configured');
+      return apiError('Payment system not configured', 500, 'STRIPE_PRICE_NOT_CONFIGURED');
+    }
+
+    if (!appUrl) {
+      logger.error('App URL not configured');
+      return apiError('Payment system not configured', 500, 'APP_URL_NOT_CONFIGURED');
+    }
+
+    // Initialize Stripe (trim any whitespace from key)
+    const stripe = new Stripe(stripeSecretKey.trim(), {
+      apiVersion: '2024-11-20.acacia',
+      typescript: true,
+    });
+
+    logger.info('Creating Stripe checkout session', { documentId });
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID!,
+          price: stripePriceId,
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/editor?session_id={CHECKOUT_SESSION_ID}&documentId=${documentId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/preview?documentId=${documentId}`,
+      success_url: `${appUrl}/editor?session_id={CHECKOUT_SESSION_ID}&documentId=${documentId}`,
+      cancel_url: `${appUrl}/preview?documentId=${documentId}`,
       metadata: {
         documentId,
       },
