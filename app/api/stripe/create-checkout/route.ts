@@ -44,9 +44,11 @@ export async function POST(req: NextRequest) {
     // Log environment variables (without exposing full keys)
     logger.info('=== STRIPE ENV CHECK ===', {
       hasSecretKey: !!stripeSecretKey,
-      secretKeyPrefix: stripeSecretKey ? stripeSecretKey.substring(0, 12) + '...' : 'MISSING',
+      secretKeyPrefix: stripeSecretKey ? stripeSecretKey.substring(0, 15) + '...' : 'MISSING',
+      secretKeyLength: stripeSecretKey?.length,
       hasPriceId: !!stripePriceId,
-      priceIdPrefix: stripePriceId ? stripePriceId.substring(0, 12) + '...' : 'MISSING',
+      priceIdPrefix: stripePriceId ? stripePriceId.substring(0, 15) + '...' : 'MISSING',
+      priceIdLength: stripePriceId?.length,
       hasAppUrl: !!appUrl,
       appUrl,
     });
