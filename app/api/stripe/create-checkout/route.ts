@@ -69,10 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize Stripe (trim any whitespace from key)
-    const stripe = new Stripe(stripeSecretKey.trim(), {
-      apiVersion: '2024-11-20.acacia',
-      typescript: true,
-    });
+    const stripe = new Stripe(stripeSecretKey.trim());
 
     logger.info('Creating Stripe checkout session', { documentId });
 
