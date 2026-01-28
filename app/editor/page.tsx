@@ -77,6 +77,16 @@ export default function EditorPage() {
           return;
         }
 
+        // If we have a session_id, mark document as paid first
+        if (sessionId) {
+          logger.info('Marking document as paid after Stripe success', { sessionId, documentId: docId });
+          await fetch('/api/document/mark-paid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documentId: docId }),
+          });
+        }
+
         // Verify payment status with SERVER (security!)
         logger.info('Verifying payment status', { documentId: docId, sessionId });
         
