@@ -9,8 +9,8 @@ import { GeneratedDocument } from '@/types/document';
 import { logger } from '@/lib/logger';
 
 /**
- * Preview page
- * Shows blurred document + unlock CTA
+ * Preview page - Smart Preview approach
+ * Shows enough content to build trust without giving away full letter
  */
 export default function PreviewPage() {
   const router = useRouter();
@@ -103,6 +103,9 @@ export default function PreviewPage() {
     );
   }
 
+  // Parse document sections for smart preview
+  const previewSections = document ? parseDocumentForPreview(document.rawText) : null;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background-elevated">
@@ -136,48 +139,129 @@ export default function PreviewPage() {
           />
           <CardContent>
             <div className="space-y-6">
-              <div className="bg-background-elevated p-8 rounded-lg border border-border relative overflow-hidden min-h-[500px]">
-                <div className="filter blur-sm select-none">
-                  {document ? (
-                    <div className="font-serif leading-relaxed text-foreground-muted whitespace-pre-wrap max-w-none">
-                      {document.rawText.substring(0, 400)}...
-                    </div>
+              {/* Word count badge */}
+              {previewSections && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="px-3 py-1.5 bg-accent-purple/10 border border-accent-purple/20 rounded-full text-accent-purple font-medium">
+                    {previewSections.wordCount} words
+                  </div>
+                  <span className="text-foreground-muted">
+                    Professional immigration letter ready to customize
+                  </span>
+                </div>
+              )}
+
+              {/* Document preview */}
+              <div className="bg-background-elevated p-8 rounded-lg border border-border relative overflow-hidden min-h-[600px]">
+                {/* Letter formatting with proper spacing and structure */}
+                <div className="font-serif leading-relaxed text-foreground" style={{ lineHeight: '1.8' }}>
+                  {previewSections ? (
+                    <>
+                      {/* Clear opening section with proper letter formatting */}
+                      <div className="text-foreground mb-6 whitespace-pre-line">
+                        {previewSections.opening}
+                      </div>
+
+                      {/* Blurred locked content section */}
+                      <div className="relative min-h-[400px]">
+                        {/* Blurred text - clearly visible with proper formatting */}
+                        <div className="text-foreground filter blur-sm select-none opacity-50 pr-8 whitespace-pre-line">
+                          {previewSections.lockedPreview}
+                          <div className="mt-6">
+                            {previewSections.lockedPreview}
+                          </div>
+                        </div>
+
+                        {/* Unlock modal - positioned to show blur around it */}
+                        <div className="absolute top-12 left-1/2 -translate-x-1/2">
+                          <div className="text-center bg-zinc-900/90 backdrop-blur-xl border-2 border-accent-purple/50 rounded-2xl p-8 shadow-2xl w-96">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-purple/20 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-xl font-bold text-white mb-3">
+                              Unlock Your Full Letter
+                            </h4>
+                            <p className="text-sm text-gray-300 mb-6">
+                              Get full access to edit, customize, and download as PDF
+                            </p>
+                            <Button
+                              variant="primary"
+                              size="md"
+                              onClick={handleUnlock}
+                              isLoading={isPurchasing}
+                              className="w-full"
+                            >
+                              Unlock for $49
+                            </Button>
+                            <p className="text-xs text-gray-400 mt-4">
+                              Secure payment via Stripe • One-time payment
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   ) : (
-                    <div className="font-serif leading-relaxed">
-                      <p className="mb-4">January 27, 2026</p>
-                      <p className="mb-4">To Whom It May Concern:</p>
-                      <p className="mb-4">
-                        I am writing to provide additional context regarding my application...
-                      </p>
-                    </div>
+                    // Fallback preview with realistic letter formatting
+                    <>
+                      <div className="text-foreground mb-6 whitespace-pre-line">
+                        <div className="mb-8">
+                          <div>123 Main Street</div>
+                          <div>New York, NY 10001</div>
+                          <div>email@example.com</div>
+                          <div>(555) 123-4567</div>
+                        </div>
+                        <div className="mb-6">January 27, 2026</div>
+                        <div className="mb-6">To Whom It May Concern:</div>
+                        <p>I am writing to provide additional context regarding my immigration application. My situation requires careful consideration of several important factors...</p>
+                      </div>
+                      
+                      <div className="relative min-h-[400px]">
+                        <div className="text-foreground filter blur-sm select-none opacity-50 pr-8">
+                          <p className="mb-4">Throughout my time in the United States, I have demonstrated my commitment to contributing positively to this country. My professional background and personal values align with the principles that make this nation strong.</p>
+                          <p className="mb-4">I respectfully request your favorable consideration of my application. I am prepared to provide any additional documentation or information that may be helpful in your review process.</p>
+                          <p>Sincerely,</p>
+                          <p>[Your Name]</p>
+                        </div>
+
+                        <div className="absolute top-12 left-1/2 -translate-x-1/2">
+                          <div className="text-center bg-zinc-900/90 backdrop-blur-xl border-2 border-accent-purple/50 rounded-2xl p-8 shadow-2xl w-96">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-purple/20 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-xl font-bold text-white mb-3">
+                              Unlock Your Full Letter
+                            </h4>
+                            <p className="text-sm text-gray-300 mb-6">
+                              Get full access to edit, customize, and download as PDF
+                            </p>
+                            <Button
+                              variant="primary"
+                              size="md"
+                              onClick={handleUnlock}
+                              isLoading={isPurchasing}
+                              className="w-full"
+                            >
+                              Unlock for $49
+                            </Button>
+                            <p className="text-xs text-gray-400 mt-4">
+                              Secure payment via Stripe • One-time payment
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background flex items-center justify-center">
-                  <div className="text-center bg-card/90 backdrop-blur-sm border border-accent-purple/30 rounded-lg p-8 shadow-glow">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-purple/20 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-xl font-semibold text-foreground mb-2">
-                      Unlock Your Full Letter
-                    </h4>
-                    <p className="text-foreground-muted mb-6 max-w-sm">
-                      Get full access to edit, customize, and download your letter as PDF
-                    </p>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={handleUnlock}
-                      isLoading={isPurchasing}
-                      className="min-w-[200px]"
-                    >
-                      Unlock for $49
-                    </Button>
-                    <p className="text-xs text-foreground-muted mt-4">
-                      Secure payment via Stripe • One-time payment • Not legal advice
-                    </p>
-                  </div>
+
+                {/* Trust signal footer */}
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs text-foreground-muted text-center">
+                    Not legal advice • For informational purposes only • Professional formatting included
+                  </p>
                 </div>
               </div>
             </div>
@@ -186,4 +270,52 @@ export default function PreviewPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * Helper function to parse document into preview sections
+ * Shows limited opening (first ~100-120 words), rest is locked
+ * Opening will fade/blur naturally (no hard cutoff)
+ */
+function parseDocumentForPreview(text: string) {
+  // Count words
+  const wordCount = text.trim().split(/\s+/).length;
+
+  // Split into paragraphs
+  const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+
+  if (paragraphs.length === 0) {
+    return null;
+  }
+
+  // Opening: First ~120 words (will fade naturally with CSS)
+  let opening = '';
+  let wordsSoFar = 0;
+  let openingParagraphCount = 0;
+  
+  for (let i = 0; i < paragraphs.length && wordsSoFar < 120; i++) {
+    const paragraphWords = paragraphs[i].split(/\s+/).length;
+    
+    // If adding this paragraph would exceed 120 words, include partial
+    if (wordsSoFar + paragraphWords > 120) {
+      const words = paragraphs[i].split(/\s+/);
+      const wordsToTake = 120 - wordsSoFar;
+      opening += words.slice(0, wordsToTake).join(' ');
+      break;
+    }
+    
+    opening += paragraphs[i] + '\n\n';
+    wordsSoFar += paragraphWords;
+    openingParagraphCount++;
+  }
+
+  // Locked content: Everything after opening (including closing)
+  const remainingParagraphs = paragraphs.slice(openingParagraphCount);
+  const lockedPreview = remainingParagraphs.slice(0, 3).join('\n\n');
+
+  return {
+    wordCount,
+    opening: opening.trim(),
+    lockedPreview: lockedPreview || 'Additional context and details...',
+  };
 }

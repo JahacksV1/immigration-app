@@ -13,7 +13,6 @@ export const formDataSchema = z.object({
   }),
   applicationContext: z.object({
     applicationType: z.string().min(1, 'Application type is required'),
-    targetCountry: z.string().min(1, 'Target country is required'),
   }),
   explanation: z.object({
     mainExplanation: z.string().min(50, 'Explanation must be at least 50 characters'),
@@ -21,7 +20,16 @@ export const formDataSchema = z.object({
     background: z.string().optional(),
   }),
   tone: z.enum(['formal', 'neutral', 'personal']),
+  template: z.enum(['conservative', 'modern', 'professional']),
   emphasis: z.string().optional(),
+  contactInfo: z.object({
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+    email: z.string().optional(),
+    phone: z.string().optional(),
+  }).optional(),
 });
 
 export type ValidatedFormData = z.infer<typeof formDataSchema>;

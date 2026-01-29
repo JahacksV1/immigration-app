@@ -6,6 +6,7 @@ const STEP_ORDER: FormStepId[] = [
   'application-context',
   'explanation',
   'tone',
+  'contact-details',
 ];
 
 interface UseFormStepReturn {

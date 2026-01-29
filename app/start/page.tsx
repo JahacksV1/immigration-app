@@ -2,19 +2,21 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { SavedIndicator } from '@/components/ui/SavedIndicator';
 import { ProgressBar } from '@/components/form/ProgressBar';
 import { FormNavigation } from '@/components/form/FormNavigation';
 import { AboutYouStep } from '@/components/form/AboutYouStep';
 import { ApplicationContextStep } from '@/components/form/ApplicationContextStep';
 import { ExplanationStep } from '@/components/form/ExplanationStep';
 import { ToneStep } from '@/components/form/ToneStep';
+import { ContactDetailsStep } from '@/components/form/ContactDetailsStep';
 import { useFormStep } from '@/hooks/useFormStep';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
 
-const STEP_NAMES = ['About You', 'Application', 'Explanation', 'Tone'];
+const STEP_NAMES = ['About You', 'Application', 'Explanation', 'Tone', 'Contact Info'];
 
 /**
  * Multi-step form page
@@ -23,7 +25,7 @@ const STEP_NAMES = ['About You', 'Application', 'Explanation', 'Tone'];
 export default function StartPage() {
   const router = useRouter();
   const { currentStep, currentStepId, goToNextStep, goToPreviousStep, totalSteps } = useFormStep();
-  const { formData, updateFormData, isLoaded } = useFormPersistence();
+  const { formData, updateFormData, isLoaded, saveStatus } = useFormPersistence();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validate current step
@@ -36,14 +38,13 @@ export default function StartPage() {
           formData.aboutYou.currentCountry.length > 0
         );
       case 'application-context':
-        return (
-          formData.applicationContext.applicationType.length > 0 &&
-          formData.applicationContext.targetCountry.length > 0
-        );
+        return formData.applicationContext.applicationType.length > 0;
       case 'explanation':
         return formData.explanation.mainExplanation.trim().length >= 50;
       case 'tone':
         return formData.tone.length > 0;
+      case 'contact-details':
+        return true; // Optional step - always allow proceed
       default:
         return false;
     }
@@ -147,26 +148,31 @@ export default function StartPage() {
       )}
 
       {/* Header */}
-      <header className="border-b border-border bg-background-elevated">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 text-foreground-muted hover:text-accent-purple transition-colors group"
-          >
-            <svg 
-              className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+      <header className="border-b border-border bg-background-elevated sticky top-0 z-40">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-foreground-muted hover:text-accent-purple transition-colors group"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back</span>
-          </Link>
-          <div className="h-6 w-px bg-border" />
-          <h1 className="text-xl font-semibold text-foreground">
-            Immigration Letter Generator
-          </h1>
+              <svg 
+                className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </Link>
+            <div className="h-6 w-px bg-border" />
+            <h1 className="text-xl font-semibold text-foreground">
+              Immigration Letter Generator
+            </h1>
+          </div>
+          
+          {/* Saved Indicator */}
+          <SavedIndicator status={saveStatus} />
         </div>
       </header>
 
@@ -207,8 +213,16 @@ export default function StartPage() {
 
             {currentStepId === 'tone' && (
               <ToneStep
-                data={{ tone: formData.tone, emphasis: formData.emphasis }}
-                onChange={(data) => updateFormData({ tone: data.tone, emphasis: data.emphasis })}
+                data={{ tone: formData.tone, template: formData.template, emphasis: formData.emphasis }}
+                onChange={(data) => updateFormData({ tone: data.tone, template: data.template, emphasis: data.emphasis })}
+              />
+            )}
+
+            {currentStepId === 'contact-details' && (
+              <ContactDetailsStep
+                data={formData.contactInfo || {}}
+                onChange={(data) => updateFormData({ contactInfo: data })}
+                onSkip={goToNextStep}
               />
             )}
 

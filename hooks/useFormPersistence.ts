@@ -11,7 +11,6 @@ const DEFAULT_FORM_DATA: FormData = {
   },
   applicationContext: {
     applicationType: '',
-    targetCountry: '',
   },
   explanation: {
     mainExplanation: '',
@@ -19,14 +18,19 @@ const DEFAULT_FORM_DATA: FormData = {
     background: '',
   },
   tone: 'neutral',
+  template: 'professional',
   emphasis: '',
+  contactInfo: {},
 };
+
+export type SaveStatus = 'idle' | 'saving' | 'saved';
 
 interface UseFormPersistenceReturn {
   formData: FormData;
   updateFormData: (updates: Partial<FormData>) => void;
   clearFormData: () => void;
   isLoaded: boolean;
+  saveStatus: SaveStatus;
 }
 
 /**
@@ -36,6 +40,7 @@ interface UseFormPersistenceReturn {
 export function useFormPersistence(): UseFormPersistenceReturn {
   const [formData, setFormData] = useState<FormData>(DEFAULT_FORM_DATA);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -55,6 +60,8 @@ export function useFormPersistence(): UseFormPersistenceReturn {
 
   // Update and persist
   const updateFormData = useCallback((updates: Partial<FormData>) => {
+    setSaveStatus('saving');
+    
     setFormData((prev) => {
       const next = { ...prev, ...updates };
       try {
@@ -65,6 +72,11 @@ export function useFormPersistence(): UseFormPersistenceReturn {
       }
       return next;
     });
+    
+    // Short delay to show "Saving..." state, then show "Saved"
+    setTimeout(() => {
+      setSaveStatus('saved');
+    }, 300);
   }, []);
 
   // Clear form
@@ -78,5 +90,5 @@ export function useFormPersistence(): UseFormPersistenceReturn {
     }
   }, []);
 
-  return { formData, updateFormData, clearFormData, isLoaded };
+  return { formData, updateFormData, clearFormData, isLoaded, saveStatus };
 }

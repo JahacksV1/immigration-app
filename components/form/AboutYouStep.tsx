@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { FormData } from '@/types/form';
 import { COUNTRIES } from '@/lib/constants';
 
@@ -33,22 +33,22 @@ export function AboutYouStep({ data, onChange }: AboutYouStepProps) {
         required
       />
 
-      <Select
+      <SearchableSelect
         label="Country of Citizenship"
-        placeholder="Select your country of citizenship"
+        placeholder="Type to search countries..."
         tooltip="Your country of citizenship helps us understand your immigration context and tailor the letter accordingly."
         value={data.citizenshipCountry}
-        onChange={(e) => onChange({ ...data, citizenshipCountry: e.target.value })}
+        onChange={(value) => onChange({ ...data, citizenshipCountry: value })}
         options={COUNTRIES.map(c => ({ value: c.value, label: c.label }))}
         required
       />
 
-      <Select
+      <SearchableSelect
         label="Current Country of Residence"
-        placeholder="Select where you currently live"
+        placeholder="Type to search countries..."
         tooltip="Where you currently live. This provides important context for your immigration application."
         value={data.currentCountry}
-        onChange={(e) => onChange({ ...data, currentCountry: e.target.value })}
+        onChange={(value) => onChange({ ...data, currentCountry: value })}
         options={COUNTRIES.map(c => ({ value: c.value, label: c.label }))}
         required
       />

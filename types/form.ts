@@ -4,7 +4,20 @@
  */
 
 // Form step enumeration
-export type FormStepId = 'about-you' | 'application-context' | 'explanation' | 'tone';
+export type FormStepId = 'about-you' | 'application-context' | 'explanation' | 'tone' | 'contact-details';
+
+// Contact information structure (optional, not stored on backend)
+export interface ContactInformation {
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  email?: string;
+  phone?: string;
+}
+
+// Template/formatting style options
+export type TemplateStyle = 'conservative' | 'modern' | 'professional';
 
 // Form data structure (matches localStorage)
 export interface FormData {
@@ -15,7 +28,6 @@ export interface FormData {
   };
   applicationContext: {
     applicationType: string;
-    targetCountry: string;
   };
   explanation: {
     mainExplanation: string;
@@ -23,7 +35,9 @@ export interface FormData {
     background?: string;
   };
   tone: 'formal' | 'neutral' | 'personal';
+  template: TemplateStyle;
   emphasis?: string;
+  contactInfo?: ContactInformation;
 }
 
 // Form step state
