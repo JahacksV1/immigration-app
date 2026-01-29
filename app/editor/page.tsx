@@ -140,8 +140,18 @@ export default function EditorPage() {
     try {
       logger.info('Downloading PDF', { documentId });
 
-      // Call real download API
-      const response = await fetch(`/api/download?documentId=${documentId}`);
+      // Send document content to API for PDF generation (Vercel serverless compatible)
+      const response = await fetch('/api/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentId,
+          documentText: editedText,
+          applicantName: document?.sections?.[0]?.content?.match(/My name is ([^,]+)/)?.[1] || 'applicant',
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Download failed: ${response.status}`);

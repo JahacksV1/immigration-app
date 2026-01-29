@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDocument } from '@/lib/services/storage-service';
 import { generatePDF, generatePdfFilename } from '@/lib/services/pdf-service';
 import { apiError } from '@/lib/api-helpers';
 import { logger } from '@/lib/logger';
@@ -8,32 +7,34 @@ import { logger } from '@/lib/logger';
  * GET /api/download?documentId=xxx
  * Download generated letter as PDF
  */
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const documentId = req.nextUrl.searchParams.get('documentId');
+    const body = await req.json();
+    const { documentId, documentText, applicantName } = body;
 
-    if (!documentId) {
-      return apiError('Document ID required', 400, 'MISSING_DOCUMENT_ID');
+    if (!documentId || !documentText) {
+      return apiError('Document ID and text required', 400, 'MISSING_DOCUMENT_DATA');
     }
 
-    // Get document
-    const docResult = getDocument(documentId);
-    if (!docResult.success || !docResult.data) {
-      return apiError('Document not found or expired', 404, 'DOCUMENT_NOT_FOUND');
-    }
+    logger.info('Generating PDF from client data', { 
+      documentId,
+      wordCount: documentText.split(/\s+/).length,
+    });
 
-    // Check if paid
-    if (!docResult.data.isPaid) {
-      return apiError('Payment required', 402, 'PAYMENT_REQUIRED');
-    }
+    // Create document object for PDF generation
+    const document = {
+      sections: [],
+      rawText: documentText,
+      generatedAt: new Date().toISOString(),
+    };
 
     // Generate PDF
-    const pdfResult = await generatePDF(docResult.data);
+    const pdfResult = await generatePDF(document);
     if (!pdfResult.success || !pdfResult.buffer) {
       return apiError('Failed to generate PDF', 500, 'PDF_GENERATION_ERROR');
     }
 
-    const filename = generatePdfFilename(docResult.data.formData.aboutYou.fullName);
+    const filename = generatePdfFilename(applicantName);
 
     logger.info('PDF downloaded', {
       documentId,

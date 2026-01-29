@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import Stripe from 'stripe';
 import { createCheckoutSchema } from '@/lib/validation';
 import { apiSuccess, apiError, withErrorHandling } from '@/lib/api-helpers';
-import { getDocument } from '@/lib/services/storage-service';
 import { logger } from '@/lib/logger';
 
 /**
@@ -25,16 +24,10 @@ export async function POST(req: NextRequest) {
 
     const { documentId } = validation.data;
 
-    // Verify document exists
-    const docResult = getDocument(documentId);
-    if (!docResult.success || !docResult.data) {
-      return apiError('Document not found or expired', 404, 'DOCUMENT_NOT_FOUND');
-    }
-
-    // Check if already paid
-    if (docResult.data.isPaid) {
-      return apiError('Document already purchased', 400, 'ALREADY_PAID');
-    }
+    // Note: Skip server-side document verification for serverless compatibility
+    // Document is stored in localStorage on client side
+    // We only need documentId to create checkout session and track payment
+    logger.info('Creating checkout for document', { documentId });
 
     // Initialize Stripe
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
