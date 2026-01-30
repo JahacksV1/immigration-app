@@ -47,6 +47,11 @@ export default function HomePage() {
                 Start My Letter
               </Button>
             </Link>
+            <Link href="/examples">
+              <Button variant="outline" size="lg" className="min-w-[200px]">
+                View Examples
+              </Button>
+            </Link>
           </div>
 
           {/* Trust badges */}
