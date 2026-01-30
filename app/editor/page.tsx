@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
+import { SavedIndicator } from '@/components/ui/SavedIndicator';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { GeneratedDocument } from '@/types/document';
 import { logger } from '@/lib/logger';
+import type { SaveStatus } from '@/hooks/useFormPersistence';
 
 /**
  * Editor page
@@ -22,6 +24,7 @@ export default function EditorPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   // Auto-dismiss success banner after 15 seconds
   useEffect(() => {
@@ -199,6 +202,41 @@ export default function EditorPage() {
     }
   };
 
+  // Auto-save edited text to localStorage
+  const saveEdits = useCallback(() => {
+    if (!documentId) return;
+    
+    setSaveStatus('saving');
+    
+    try {
+      // Save edited version to localStorage
+      const editedDoc = {
+        ...document,
+        rawText: editedText,
+      };
+      localStorage.setItem(`document-${documentId}`, JSON.stringify(editedDoc));
+      logger.info('Edits auto-saved to localStorage');
+      
+      setTimeout(() => {
+        setSaveStatus('saved');
+      }, 300);
+    } catch (error) {
+      logger.error('Failed to save edits', { error });
+      setSaveStatus('idle');
+    }
+  }, [documentId, editedText, document]);
+
+  // Auto-save when editedText changes (debounced)
+  useEffect(() => {
+    if (!editedText || !documentId) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveEdits();
+    }, 1000); // Save 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [editedText, documentId, saveEdits]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -209,7 +247,7 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background-elevated">
+      <header className="border-b border-border bg-background-elevated sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
@@ -231,14 +269,20 @@ export default function EditorPage() {
               Immigration Letter Generator
             </h1>
           </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleDownload}
-            isLoading={isDownloading}
-          >
-            Download PDF
-          </Button>
+          
+          <div className="flex items-center gap-4">
+            {/* Saved Indicator */}
+            <SavedIndicator status={saveStatus} />
+            
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleDownload}
+              isLoading={isDownloading}
+            >
+              Download PDF
+            </Button>
+          </div>
         </div>
       </header>
 
