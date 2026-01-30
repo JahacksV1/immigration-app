@@ -10,8 +10,15 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+}
 
-  /* Custom scrollbar */
+/* Non-critical styles - loaded after page paint */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Custom scrollbar - non-critical */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -27,11 +34,5 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-border-light;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
   }
 }
