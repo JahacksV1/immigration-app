@@ -63,7 +63,7 @@ export default function PrivacyPage() {
 
               <section>
                 <h3 className="text-foreground font-semibold mb-3">Contact</h3>
-                <p>For privacy questions, email: <a href="mailto:support@example.com" className="text-accent-purple hover:underline">support@example.com</a></p>
+                <p>For privacy questions, email: <a href="mailto:immigrationexplanationletter@gmail.com" className="text-accent-purple hover:underline">immigrationexplanationletter@gmail.com</a></p>
               </section>
             </div>
           </CardContent>

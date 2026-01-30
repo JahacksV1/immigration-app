@@ -238,7 +238,7 @@ export default function HomePage() {
               <Link href="/terms" className="text-sm text-foreground-muted hover:text-foreground transition-colors">
                 Terms of Service
               </Link>
-              <a href="mailto:support@example.com" className="text-sm text-foreground-muted hover:text-foreground transition-colors">
+              <a href="mailto:immigrationexplanationletter@gmail.com" className="text-sm text-foreground-muted hover:text-foreground transition-colors">
                 Contact
               </a>
             </div>

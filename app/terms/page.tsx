@@ -94,7 +94,7 @@ export default function TermsPage() {
 
               <section>
                 <h3 className="text-foreground font-semibold mb-3">Contact</h3>
-                <p>Questions about these terms? Email: <a href="mailto:support@example.com" className="text-accent-purple hover:underline">support@example.com</a></p>
+                <p>Questions about these terms? Email: <a href="mailto:immigrationexplanationletter@gmail.com" className="text-accent-purple hover:underline">immigrationexplanationletter@gmail.com</a></p>
               </section>
             </div>
           </CardContent>

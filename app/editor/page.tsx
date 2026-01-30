@@ -419,10 +419,10 @@ export default function EditorPage() {
           <p className="text-sm text-foreground-muted">
             Need help? Contact us at{' '}
             <a 
-              href="mailto:support@example.com" 
+              href="mailto:immigrationexplanationletter@gmail.com" 
               className="text-accent-purple hover:underline"
             >
-              support@example.com
+              immigrationexplanationletter@gmail.com
             </a>
           </p>
         </div>
