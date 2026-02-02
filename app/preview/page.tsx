@@ -214,6 +214,28 @@ export default function PreviewPage() {
                             <p className="text-sm text-gray-300 mb-6">
                               Get full access to edit, customize, and download as PDF
                             </p>
+                            
+                            {/* Email input */}
+                            <div className="mb-6 text-left">
+                              <label htmlFor="email-input" className="block text-sm font-medium text-gray-300 mb-2">
+                                Email Address (Optional)
+                              </label>
+                              <input
+                                id="email-input"
+                                type="email"
+                                placeholder="your.email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all"
+                              />
+                              <p className="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                We'll email you a backup copy of your letter
+                              </p>
+                            </div>
+
                             <Button
                               variant="primary"
                               size="md"
@@ -224,7 +246,7 @@ export default function PreviewPage() {
                               Unlock for $49
                             </Button>
                             <p className="text-xs text-gray-400 mt-4">
-                              Secure payment via Stripe • One-time payment
+                              Secure payment via Stripe • One-time payment • Not legal advice
                             </p>
                           </div>
                         </div>
@@ -266,6 +288,28 @@ export default function PreviewPage() {
                             <p className="text-sm text-gray-300 mb-6">
                               Get full access to edit, customize, and download as PDF
                             </p>
+                            
+                            {/* Email input */}
+                            <div className="mb-6 text-left">
+                              <label htmlFor="email-input-fallback" className="block text-sm font-medium text-gray-300 mb-2">
+                                Email Address (Optional)
+                              </label>
+                              <input
+                                id="email-input-fallback"
+                                type="email"
+                                placeholder="your.email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all"
+                              />
+                              <p className="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                We'll email you a backup copy of your letter
+                              </p>
+                            </div>
+
                             <Button
                               variant="primary"
                               size="md"
@@ -276,7 +320,7 @@ export default function PreviewPage() {
                               Unlock for $49
                             </Button>
                             <p className="text-xs text-gray-400 mt-4">
-                              Secure payment via Stripe • One-time payment
+                              Secure payment via Stripe • One-time payment • Not legal advice
                             </p>
                           </div>
                         </div>
