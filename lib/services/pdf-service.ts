@@ -37,20 +37,40 @@ export async function generatePDF(document: GeneratedDocument): Promise<PdfResul
     doc.setFont('times', 'normal');
     doc.setFontSize(12);
 
-    // Page margins
+    // Page margins and dimensions
     const leftMargin = 72;  // 1 inch
     const rightMargin = 72;
     const topMargin = 72;
+    const bottomMargin = 72;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const maxLineWidth = pageWidth - leftMargin - rightMargin;
+    const maxHeight = pageHeight - topMargin - bottomMargin;
 
     // Split text into lines that fit the page width
     const lines = doc.splitTextToSize(document.rawText, maxLineWidth);
 
-    // Add text to PDF with proper line spacing (1.6)
-    doc.text(lines, leftMargin, topMargin, {
-      lineHeightFactor: 1.6,
-    });
+    // Calculate line height (font size * line height factor)
+    const fontSize = 12;
+    const lineHeight = fontSize * 1.6;
+
+    // Add text with automatic pagination
+    let currentY = topMargin;
+    let currentPage = 1;
+
+    for (let i = 0; i < lines.length; i++) {
+      // Check if we need a new page
+      if (currentY + lineHeight > pageHeight - bottomMargin) {
+        doc.addPage();
+        currentPage++;
+        currentY = topMargin;
+        logger.info('Added new PDF page', { page: currentPage });
+      }
+
+      // Add line to PDF
+      doc.text(lines[i], leftMargin, currentY);
+      currentY += lineHeight;
+    }
 
     // Convert to buffer
     const pdfOutput = doc.output('arraybuffer');

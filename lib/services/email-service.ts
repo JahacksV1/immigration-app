@@ -145,7 +145,9 @@ function generateEmailHtml(applicantName: string): string {
       <div class="attachment-box">
         <div class="pdf-icon">📄</div>
         <p style="margin: 0; font-weight: 600; color: #1f2937;">Immigration Letter (PDF)</p>
-        <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">Professional formatting ready for submission</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">
+          <strong>↓ Scroll to bottom of email to download attachment ↓</strong>
+        </p>
       </div>
       
       <p><strong>What's Included:</strong></p>
