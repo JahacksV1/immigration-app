@@ -77,7 +77,7 @@ export async function sendLetterEmail(
       attachments: [
         {
           filename,
-          content: pdfResult.buffer,
+          content: pdfResult.buffer.toString('base64'),
         },
       ],
     });
