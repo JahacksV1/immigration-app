@@ -42,4 +42,5 @@ export const generateLetterSchema = z.object({
 // Stripe checkout request validation
 export const createCheckoutSchema = z.object({
   documentId: z.string().startsWith('doc_').min(20, 'Invalid document ID'),
+  email: z.string().email('Invalid email address').optional(),
 });

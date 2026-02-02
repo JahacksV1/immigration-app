@@ -18,6 +18,7 @@ export default function PreviewPage() {
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     // Get document ID from URL params (passed from redirects) or localStorage
@@ -47,6 +48,21 @@ export default function PreviewPage() {
       }
     } else {
       logger.warn('Document not found in localStorage', { documentId: docId });
+    }
+
+    // Pre-fill email if already collected in contact details
+    const formData = localStorage.getItem('immigration-letter-form');
+    if (formData) {
+      try {
+        const parsed = JSON.parse(formData);
+        const contactEmail = parsed?.contactDetails?.email;
+        if (contactEmail) {
+          setEmail(contactEmail);
+          logger.info('Pre-filled email from contact details', { email: contactEmail });
+        }
+      } catch (error) {
+        logger.warn('Could not parse form data for email', { error });
+      }
     }
 
     setIsLoading(false);
@@ -80,7 +96,10 @@ export default function PreviewPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ documentId }),
+        body: JSON.stringify({ 
+          documentId,
+          email: email.trim() || undefined, // Pass email if provided
+        }),
       });
 
       const result = await response.json();

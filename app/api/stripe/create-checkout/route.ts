@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
       return apiError('Invalid document ID', 400, 'VALIDATION_ERROR');
     }
 
-    const { documentId } = validation.data;
+    const { documentId, email } = validation.data;
 
     // Note: Skip server-side document verification for serverless compatibility
     // Document is stored in localStorage on client side
     // We only need documentId to create checkout session and track payment
-    logger.info('Creating checkout for document', { documentId });
+    logger.info('Creating checkout for document', { documentId, email: email || 'not provided' });
 
     // Initialize Stripe
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -78,8 +78,10 @@ export async function POST(req: NextRequest) {
       mode: 'payment',
       success_url: `${appUrl}/editor?session_id={CHECKOUT_SESSION_ID}&documentId=${documentId}`,
       cancel_url: `${appUrl}/preview?documentId=${documentId}`,
+      customer_email: email || undefined, // Pre-fill email in Stripe checkout
       metadata: {
         documentId,
+        userEmail: email || '', // Store email for webhook
       },
     });
 
