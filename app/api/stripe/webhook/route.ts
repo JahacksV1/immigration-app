@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { markDocumentAsPaid, getDocument } from '@/lib/services/storage-service';
-import { sendLetterEmail } from '@/lib/services/email-service';
+import { markDocumentAsPaid } from '@/lib/services/storage-service';
 import { logger } from '@/lib/logger';
 
 /**
@@ -95,61 +94,13 @@ export async function POST(req: NextRequest) {
         paymentStatus: session.payment_status,
       });
 
-      // Send email with letter (async, non-blocking)
-      // Get email from metadata or Stripe customer email
-      const userEmail = session.metadata?.userEmail || session.customer_email || session.customer_details?.email;
-      
-      if (userEmail && userEmail.trim()) {
-        logger.info('Attempting to send letter email', {
-          documentId,
-          email: userEmail,
-        });
-
-        // Try to get document from storage (best effort)
-        const docResult = getDocument(documentId);
-        
-        if (docResult.success && docResult.data) {
-          // Extract applicant name from document
-          const applicantName = docResult.data.sections?.[0]?.content?.match(/My name is ([^,]+)/)?.[1] || 'Customer';
-          
-          // Send email (async, don't block webhook response)
-          sendLetterEmail({
-            to: userEmail,
-            documentText: docResult.data.rawText,
-            applicantName,
-          }).then((emailResult) => {
-            if (emailResult.success) {
-              logger.info('Letter email sent successfully', {
-                documentId,
-                email: userEmail,
-                emailId: emailResult.data?.emailId,
-              });
-            } else {
-              logger.warn('Failed to send letter email', {
-                documentId,
-                email: userEmail,
-                error: emailResult.error,
-              });
-            }
-          }).catch((error) => {
-            logger.error('Email sending error', {
-              documentId,
-              email: userEmail,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            });
-          });
-        } else {
-          logger.warn('Could not retrieve document for email', {
-            documentId,
-            error: 'Document not found in server storage (expected in serverless)',
-          });
-        }
-      } else {
-        logger.info('No email provided, skipping email delivery', {
-          documentId,
-          sessionId: session.id,
-        });
-      }
+      // NOTE: Email is sent by editor page after payment (not webhook)
+      // This ensures document is available (in localStorage) when email is sent
+      // Webhook just confirms payment and marks document as paid
+      logger.info('Payment processing complete (email sent by client)', {
+        documentId,
+        sessionId: session.id,
+      });
     }
 
     // Return 200 to acknowledge receipt

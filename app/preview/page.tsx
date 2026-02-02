@@ -88,7 +88,12 @@ export default function PreviewPage() {
         return;
       }
 
-      logger.info('Initiating Stripe checkout', { documentId });
+      // Store email in localStorage for editor page to use
+      if (email.trim()) {
+        localStorage.setItem(`email-${documentId}`, email.trim());
+      }
+
+      logger.info('Initiating Stripe checkout', { documentId, hasEmail: !!email.trim() });
 
       // Call real Stripe checkout API
       const response = await fetch('/api/stripe/create-checkout', {

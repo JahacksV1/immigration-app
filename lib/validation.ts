@@ -44,3 +44,10 @@ export const createCheckoutSchema = z.object({
   documentId: z.string().startsWith('doc_').min(20, 'Invalid document ID'),
   email: z.string().email('Invalid email address').optional(),
 });
+
+// Send email request validation
+export const sendEmailSchema = z.object({
+  email: z.string().email('Valid email address required'),
+  documentText: z.string().min(50, 'Document text too short'),
+  applicantName: z.string().min(1, 'Applicant name required'),
+});
