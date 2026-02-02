@@ -172,11 +172,13 @@ Download letter as PDF.
 
 **Purpose:** Temporary document storage
 
-**Storage Type:** In-memory Map (MVP)
+**Storage Type:** In-memory Map (MVP) + localStorage (Primary)
 - ✅ Simple, fast, no dependencies
 - ✅ Auto-cleanup after 24 hours
 - ❌ Lost on server restart
-- **Future:** Replace with Redis or database
+- ❌ **CRITICAL:** Not compatible with Vercel serverless (each request = different server)
+- ✅ **Solution:** localStorage as primary source, server storage as best effort
+- **Future:** Replace with Vercel KV, Redis, or Supabase for multi-device support
 
 **Functions:**
 - `generateDocumentId()` - Generate unique ID
@@ -339,9 +341,11 @@ User clicks "Unlock"
   → Stripe Checkout Session created
   → Redirect to Stripe
   → User pays
-  → Stripe webhook (TODO)
-  → Mark document as paid
-  → Redirect to /editor
+  → Stripe redirects to /editor?session_id=xxx&documentId=yyy
+  → Editor loads document from localStorage ✅
+  → Editor marks as paid in localStorage ✅
+  → Editor marks as paid on server (best effort)
+  → Stripe webhook runs (async, marks as paid on server)
 ```
 
 ### **5. Edit & Download** (`/editor`)

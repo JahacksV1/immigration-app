@@ -65,25 +65,25 @@ export async function POST(req: NextRequest) {
         logger.warn('Webhook missing documentId in metadata', {
           sessionId: session.id,
         });
-        return NextResponse.json(
-          { error: 'Missing documentId' },
-          { status: 400 }
-        );
+        // Don't fail - acknowledge receipt but log warning
+        return NextResponse.json({ received: true }, { status: 200 });
       }
 
-      // Mark document as paid (server-side)
+      // Mark document as paid (server-side - best effort in serverless)
+      // Note: In serverless environments, this may not persist across instances
+      // Client-side localStorage is the primary source of truth
       const result = markDocumentAsPaid(documentId);
 
       if (!result.success) {
-        logger.error('Failed to mark document as paid', {
+        logger.error('Failed to mark document as paid (serverless limitation)', {
           documentId,
           sessionId: session.id,
           error: result.error,
+          note: 'Client-side localStorage will still work',
         });
-        return NextResponse.json(
-          { error: 'Failed to process payment' },
-          { status: 500 }
-        );
+        // Don't fail the webhook - acknowledge receipt
+        // The editor page will mark as paid based on session_id in URL
+        return NextResponse.json({ received: true }, { status: 200 });
       }
 
       logger.info('Payment confirmed, document unlocked', {
@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
         sessionId: session.id,
         amount: session.amount_total,
         currency: session.currency,
+        paymentStatus: session.payment_status,
       });
     }
 

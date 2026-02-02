@@ -20,24 +20,33 @@ export default function PreviewPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   useEffect(() => {
-    // Get document ID from localStorage
+    // Get document ID from URL params (passed from redirects) or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlDocId = urlParams.get('documentId');
     const storedDocId = localStorage.getItem('current-document-id');
-    if (!storedDocId) {
+    
+    const docId = urlDocId || storedDocId;
+    
+    if (!docId) {
+      logger.warn('No document ID found on preview page, redirecting to start');
       router.push('/start');
       return;
     }
 
-    setDocumentId(storedDocId);
+    setDocumentId(docId);
 
     // Get document from localStorage (passed from API)
-    const storedDoc = localStorage.getItem(`document-${storedDocId}`);
+    const storedDoc = localStorage.getItem(`document-${docId}`);
     if (storedDoc) {
       try {
         const parsed = JSON.parse(storedDoc) as GeneratedDocument;
         setDocument(parsed);
+        logger.info('Document loaded for preview', { documentId: docId });
       } catch (error) {
-        logger.error('Failed to parse stored document', { error });
+        logger.error('Failed to parse stored document', { error, documentId: docId });
       }
+    } else {
+      logger.warn('Document not found in localStorage', { documentId: docId });
     }
 
     setIsLoading(false);

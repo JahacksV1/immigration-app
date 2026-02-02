@@ -80,54 +80,100 @@ export default function EditorPage() {
           return;
         }
 
-        // If we have a session_id, mark document as paid first
+        // PRODUCTION: Load document from localStorage
+        // Note: In serverless environments, server-side storage is unreliable
+        // We rely on localStorage as source of truth for the document content
+        const storedDoc = localStorage.getItem(`document-${docId}`);
+        
+        if (!storedDoc) {
+          logger.error('Document not found in localStorage after payment', { 
+            documentId: docId,
+            sessionId,
+            hasSessionId: !!sessionId,
+          });
+          
+          // If document is missing, redirect to start
+          alert('Your document could not be loaded. Please contact support at immigrationexplanationletter@gmail.com with your payment confirmation.');
+          router.push('/start');
+          return;
+        }
+
+        // Parse document from localStorage
+        const parsed = JSON.parse(storedDoc) as GeneratedDocument;
+
+        // If we have a session_id from Stripe, mark document as paid
         if (sessionId) {
           logger.info('Marking document as paid after Stripe success', { sessionId, documentId: docId });
-          await fetch('/api/document/mark-paid', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ documentId: docId }),
-          });
+          
+          // Mark as paid on server (best effort - may fail in serverless)
+          try {
+            await fetch('/api/document/mark-paid', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ documentId: docId }),
+            });
+            logger.info('Server-side payment status updated', { documentId: docId });
+          } catch (error) {
+            // Non-critical: Server marking failed, but we still have the document
+            logger.warn('Failed to mark document as paid on server (non-critical)', { 
+              documentId: docId, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+          }
+          
+          // Mark as paid in localStorage (client-side source of truth)
+          localStorage.setItem(`document-${docId}-paid`, 'true');
+          logger.info('Document marked as paid in localStorage', { documentId: docId });
         }
 
-        // Verify payment status with SERVER (security!)
-        logger.info('Verifying payment status', { documentId: docId, sessionId });
+        // Verify payment status from localStorage (primary) or server (fallback)
+        const isPaidInLocalStorage = localStorage.getItem(`document-${docId}-paid`) === 'true';
         
-        const response = await fetch(`/api/document/verify?documentId=${docId}`);
-        const result = await response.json();
+        if (!isPaidInLocalStorage && !sessionId) {
+          // Not paid and not coming from Stripe - verify with server
+          logger.info('Verifying payment status with server', { documentId: docId });
+          
+          try {
+            const response = await fetch(`/api/document/verify?documentId=${docId}`);
+            const result = await response.json();
 
-        if (!result.success) {
-          logger.warn('Verification failed', { documentId: docId, error: result.error });
-          router.push('/preview');
-          return;
-        }
-
-        // Check server-side payment confirmation
-        if (!result.data.isPaid) {
-          logger.warn('Document not paid, redirecting to preview', { documentId: docId });
-          router.push('/preview');
-          return;
-        }
-
-        // Document is paid - load it
-        const verifiedDocument = result.data.document;
-        if (verifiedDocument) {
-          setDocument(verifiedDocument);
-          setEditedText(verifiedDocument.rawText);
-          logger.info('Document loaded successfully', { documentId: docId });
-        } else {
-          // Fallback to localStorage (for compatibility)
-          const storedDoc = localStorage.getItem(`document-${docId}`);
-          if (storedDoc) {
-            const parsed = JSON.parse(storedDoc) as GeneratedDocument;
-            setDocument(parsed);
-            setEditedText(parsed.rawText);
+            if (!result.success || !result.data.isPaid) {
+              logger.warn('Document not paid, redirecting to preview', { documentId: docId });
+              router.push(`/preview?documentId=${docId}`);
+              return;
+            }
+            
+            // Server confirms paid - update localStorage
+            localStorage.setItem(`document-${docId}-paid`, 'true');
+          } catch (error) {
+            // Server verification failed - require payment
+            logger.error('Payment verification failed', { 
+              documentId: docId, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            router.push(`/preview?documentId=${docId}`);
+            return;
           }
         }
+
+        // Load document
+        setDocument(parsed);
+        setEditedText(parsed.rawText);
+        logger.info('Document loaded successfully', { documentId: docId, source: 'localStorage' });
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Failed to verify payment or load document', { error: errorMessage });
-        router.push('/preview');
+        
+        // Try to recover by showing what we have
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = urlParams.get('documentId') || localStorage.getItem('current-document-id');
+        
+        if (docId) {
+          router.push(`/preview?documentId=${docId}`);
+        } else {
+          router.push('/start');
+        }
       } finally {
         setIsLoading(false);
       }
