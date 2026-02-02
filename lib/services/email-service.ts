@@ -52,7 +52,7 @@ export async function sendLetterEmail(
     logger.info('Sending letter email', { to, applicantName });
 
     const { data, error } = await resend.emails.send({
-      from: 'Immigration Letter <noreply@immigrationexplanationletter.com>',
+      from: 'Immigration Letter <onboarding@resend.dev>',
       to: [to],
       subject: 'Your Immigration Explanation Letter',
       html: generateEmailHtml(applicantName, documentText),
