@@ -69,7 +69,7 @@ export async function sendLetterEmail(
     logger.info('Sending letter email with PDF attachment', { to, applicantName, filename });
 
     const { data, error } = await resend.emails.send({
-      from: 'Immigration Letter <onboarding@resend.dev>',
+      from: 'Immigration Letter <noreply@immigrationdoc.app>',
       to: [to],
       subject: 'Your Immigration Explanation Letter',
       html: generateEmailHtml(applicantName),
