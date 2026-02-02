@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
+import { generatePDF, generatePdfFilename } from './pdf-service';
 
 /**
  * Email Service
@@ -48,15 +49,37 @@ export async function sendLetterEmail(
 
     const resend = new Resend(resendApiKey);
 
-    // Send email
-    logger.info('Sending letter email', { to, applicantName });
+    // Generate PDF for attachment
+    const document = {
+      sections: [],
+      rawText: documentText,
+      generatedAt: new Date().toISOString(),
+    };
+
+    const pdfResult = await generatePDF(document);
+    if (!pdfResult.success || !pdfResult.buffer) {
+      logger.error('Failed to generate PDF for email', { to });
+      return { success: false, error: 'Failed to generate PDF' };
+    }
+
+    // Generate filename
+    const filename = generatePdfFilename(applicantName);
+
+    // Send email with PDF attachment
+    logger.info('Sending letter email with PDF attachment', { to, applicantName, filename });
 
     const { data, error } = await resend.emails.send({
       from: 'Immigration Letter <onboarding@resend.dev>',
       to: [to],
       subject: 'Your Immigration Explanation Letter',
-      html: generateEmailHtml(applicantName, documentText),
-      text: generateEmailText(applicantName, documentText),
+      html: generateEmailHtml(applicantName),
+      text: generateEmailText(applicantName),
+      attachments: [
+        {
+          filename,
+          content: pdfResult.buffer,
+        },
+      ],
     });
 
     if (error) {
@@ -89,51 +112,73 @@ export async function sendLetterEmail(
 /**
  * Generate HTML email content
  */
-function generateEmailHtml(applicantName: string, documentText: string): string {
+function generateEmailHtml(applicantName: string): string {
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #6366f1; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-    .letter { background: white; padding: 30px; border: 1px solid #d1d5db; border-radius: 4px; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.8; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    .button { display: inline-block; background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 0; }
+    .header { background: #6366f1; color: white; padding: 30px 20px; text-align: center; }
+    .content { background: #ffffff; padding: 40px 30px; }
+    .attachment-box { background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0; }
+    .pdf-icon { font-size: 48px; margin-bottom: 10px; }
+    .footer { background: #f9fafb; text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; }
+    .button { display: inline-block; background: #6366f1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 10px 0; font-weight: 600; }
+    ul { padding-left: 20px; }
+    li { margin: 8px 0; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">Your Immigration Letter is Ready</h1>
+      <h1 style="margin: 0; font-size: 24px;">✅ Your Immigration Letter is Ready</h1>
     </div>
+    
     <div class="content">
-      <p>Hello ${applicantName},</p>
-      <p>Thank you for your purchase! Your personalized immigration explanation letter is attached below.</p>
-      <p><strong>What's included:</strong></p>
-      <ul>
-        <li>✅ Professional formatting ready for submission</li>
-        <li>✅ Fully editable content tailored to your situation</li>
-        <li>✅ Can be copied, printed, or submitted digitally</li>
+      <p style="font-size: 16px; margin-top: 0;">Hello ${applicantName},</p>
+      
+      <p>Thank you for your purchase! Your personalized immigration explanation letter is ready.</p>
+      
+      <div class="attachment-box">
+        <div class="pdf-icon">📄</div>
+        <p style="margin: 0; font-weight: 600; color: #1f2937;">Immigration Letter (PDF)</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">Professional formatting ready for submission</p>
+      </div>
+      
+      <p><strong>What's Included:</strong></p>
+      <ul style="line-height: 1.8;">
+        <li>✅ Professionally formatted PDF document</li>
+        <li>✅ Personalized content tailored to your situation</li>
+        <li>✅ Ready to print or submit digitally</li>
       </ul>
-      <div class="letter">${documentText}</div>
-      <p style="margin-top: 30px;"><strong>Next Steps:</strong></p>
-      <ol>
-        <li>Review the letter carefully</li>
-        <li>Make any final edits as needed</li>
+      
+      <p><strong>Next Steps:</strong></p>
+      <ol style="line-height: 1.8;">
+        <li>Download the attached PDF</li>
+        <li>Review the content carefully</li>
         <li>Submit with your immigration application</li>
       </ol>
-      <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
-        <strong>Important:</strong> This letter is for informational purposes only and does not constitute legal advice. 
-        For legal guidance, please consult with a qualified immigration attorney.
-      </p>
+      
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 30px 0; border-radius: 4px;">
+        <p style="margin: 0; font-size: 14px; color: #92400e;">
+          <strong>Important:</strong> This letter is for informational purposes only and does not constitute legal advice. 
+          For legal guidance, please consult with a qualified immigration attorney.
+        </p>
+      </div>
+      
+      <p style="margin-bottom: 0;">Need help or have questions? We're here for you!</p>
     </div>
+    
     <div class="footer">
-      <p>Need help? Contact us at <a href="mailto:immigrationexplanationletter@gmail.com">immigrationexplanationletter@gmail.com</a></p>
-      <p style="margin-top: 10px;">© ${new Date().getFullYear()} Immigration Explanation Letter. All rights reserved.</p>
+      <p style="margin: 5px 0;">
+        <a href="mailto:immigrationexplanationletter@gmail.com" style="color: #6366f1; text-decoration: none;">
+          📧 immigrationexplanationletter@gmail.com
+        </a>
+      </p>
+      <p style="margin: 15px 0 5px 0;">© ${new Date().getFullYear()} Immigration Explanation Letter</p>
     </div>
   </div>
 </body>
@@ -144,34 +189,29 @@ function generateEmailHtml(applicantName: string, documentText: string): string 
 /**
  * Generate plain text email content
  */
-function generateEmailText(applicantName: string, documentText: string): string {
+function generateEmailText(applicantName: string): string {
   return `
-Your Immigration Letter is Ready
+✅ Your Immigration Letter is Ready
 
 Hello ${applicantName},
 
-Thank you for your purchase! Your personalized immigration explanation letter is below.
+Thank you for your purchase! Your personalized immigration explanation letter is attached to this email as a PDF.
 
-What's included:
-- Professional formatting ready for submission
-- Fully editable content tailored to your situation
-- Can be copied, printed, or submitted digitally
-
------ YOUR LETTER -----
-
-${documentText}
-
------ END OF LETTER -----
+What's Included:
+- ✅ Professionally formatted PDF document
+- ✅ Personalized content tailored to your situation
+- ✅ Ready to print or submit digitally
 
 Next Steps:
-1. Review the letter carefully
-2. Make any final edits as needed
+1. Download the attached PDF
+2. Review the content carefully
 3. Submit with your immigration application
 
 IMPORTANT: This letter is for informational purposes only and does not constitute legal advice. 
 For legal guidance, please consult with a qualified immigration attorney.
 
-Need help? Contact us at immigrationexplanationletter@gmail.com
+Need help or have questions?
+📧 immigrationexplanationletter@gmail.com
 
 © ${new Date().getFullYear()} Immigration Explanation Letter
   `.trim();
