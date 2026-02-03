@@ -45,7 +45,6 @@ export async function generatePDF(document: GeneratedDocument): Promise<PdfResul
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const maxLineWidth = pageWidth - leftMargin - rightMargin;
-    const maxHeight = pageHeight - topMargin - bottomMargin;
 
     // Split text into lines that fit the page width
     const lines = doc.splitTextToSize(document.rawText, maxLineWidth);
