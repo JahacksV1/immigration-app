@@ -78,7 +78,7 @@ export default function PreviewPage() {
         logger.info('Skipping payment (dev mode)', { documentId });
         
         // Mark document as paid on server (dev mode only)
-        await fetch('/api/document/mark-paid', {
+        await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/mark-paid`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ documentId }),
@@ -96,7 +96,7 @@ export default function PreviewPage() {
       logger.info('Initiating Stripe checkout', { documentId, hasEmail: !!email.trim() });
 
       // Call real Stripe checkout API
-      const response = await fetch('/api/stripe/create-checkout', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/stripe/create-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

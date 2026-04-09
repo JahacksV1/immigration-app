@@ -65,7 +65,7 @@ export default function StartPage() {
       logger.info('Submitting form to generate letter');
 
       // Call generation API
-      const response = await fetch('/api/generate', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

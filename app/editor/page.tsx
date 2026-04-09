@@ -109,7 +109,7 @@ export default function EditorPage() {
           
           // Mark as paid on server (best effort - may fail in serverless)
           try {
-            await fetch('/api/document/mark-paid', {
+            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/mark-paid`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ documentId: docId }),
@@ -136,7 +136,7 @@ export default function EditorPage() {
           logger.info('Verifying payment status with server', { documentId: docId });
           
           try {
-            const response = await fetch(`/api/document/verify?documentId=${docId}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/verify?documentId=${docId}`);
             const result = await response.json();
 
             if (!result.success || !result.data.isPaid) {
@@ -223,7 +223,7 @@ export default function EditorPage() {
       const applicantName = doc.sections?.[0]?.content?.match(/My name is ([^,]+)/)?.[1] || 'Customer';
 
       // Send email
-      const response = await fetch('/api/send-email', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -266,7 +266,7 @@ export default function EditorPage() {
       logger.info('Downloading PDF', { documentId });
 
       // Send document content to API for PDF generation (Vercel serverless compatible)
-      const response = await fetch('/api/download', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/download`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
