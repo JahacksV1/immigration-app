@@ -87,7 +87,7 @@ Each API request can hit a different server. In-memory storage doesn't persist a
 - Better fallback to localStorage
 - Improved logging
 
-### 4. `/BACKEND_ARCHITECTURE.md`
+### 4. `docs/ELITE_ARCHITECTURE.md` (and `docs/HYBRID_SERVER_RUNBOOK.md` for deployment)
 **Changes:**
 - Updated storage service documentation
 - Noted serverless incompatibility

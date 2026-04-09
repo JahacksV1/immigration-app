@@ -774,7 +774,7 @@ Based on Elite Architecture audit:
 1. `/docs/ELITE_ARCHITECTURE.md` - Architecture standards
 2. `/docs/ROADMAP.md` - This file
 3. `/README.md` - Project overview
-4. `/BACKEND_ARCHITECTURE.md` - Backend specific patterns
+4. `docs/ELITE_ARCHITECTURE.md` — backend patterns; `docs/HYBRID_SERVER_RUNBOOK.md` — hosting
 
 ---
 
